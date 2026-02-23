@@ -18,29 +18,22 @@ let sampleData: [CircleInfo] = [
 ]
 
 struct ContentView: View {
-    // @Stateをつけることにより、外部からも変更できるように
     @State private var circles: [CircleInfo] = sampleData
-    
-    // 追加画面を出すかどうか
     @State private var showingAddSheet = false
     
+    // ★追加：タップされた行
+    @State private var selectedCircle: CircleInfo? = nil
+    
     var body: some View {
-        NavigationView { // NavigationViewで全体を囲むとタイトルが表示されます
+        NavigationView {
             VStack {
-                // Listの前にHStackを配置
                 HStack {
-                    // ソートボタン
                     Button {
-                        // 優先度のソート
                         let priorityOrder = ["高", "中", "低"]
                         circles.sort {
-                            // 各優先度がpriorityOrder配列のどの位置にあるかを取得
-                            guard let firstIndex = priorityOrder.firstIndex(of: $0.priority),
-                                  let secondIndex = priorityOrder.firstIndex(of: $1.priority) else {
-                                return false
-                            }
-                            // インデックスが小さい方（"高"に近い方）が前に来るように並び替え
-                            return firstIndex < secondIndex
+                            guard let i0 = priorityOrder.firstIndex(of: $0.priority),
+                                  let i1 = priorityOrder.firstIndex(of: $1.priority) else { return false }
+                            return i0 < i1
                         }
                     } label: {
                         Image(systemName: "arrow.up.arrow.down")
@@ -49,13 +42,11 @@ struct ContentView: View {
                             .clipShape(Circle())
                     }
                     
-                    Spacer() // スペースを追加して右寄せに
+                    Spacer()
                     
-                    //追加ボタン
-                    Button(action: {
-                        // ボタンが押されたら、追加画面を出す
+                    Button {
                         showingAddSheet = true
-                    }) {
+                    } label: {
                         Image(systemName: "plus.circle.fill")
                             .resizable()
                             .frame(width: 25, height: 25)
@@ -65,74 +56,69 @@ struct ContentView: View {
                 
                 List {
                     ForEach(circles) { circle in
-                        HStack {
-                            Text(circle.place)
-                                .font(.headline)
-                                .frame(width: 80, alignment: .center)
-                                .padding(8)
-                                .background(Color.blue.opacity(0.2))
-                                .cornerRadius(8)
-                            
-                            VStack(alignment: .leading) {
-                                Text(circle.artistName)
+                        // ★変更：行全体をタップ可能に
+                        Button {
+                            selectedCircle = circle
+                        } label: {
+                            HStack {
+                                Text(circle.place)
                                     .font(.headline)
-                                Text(circle.direction)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .frame(width: 80, alignment: .center)
+                                    .padding(8)
+                                    .background(Color.blue.opacity(0.2))
+                                    .cornerRadius(8)
+                                
+                                VStack(alignment: .leading) {
+                                    Text(circle.artistName).font(.headline)
+                                    Text(circle.direction)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Text(circle.priority)
+                                    .font(.footnote)
+                                    .foregroundColor(.blue)
                             }
-                            Spacer()
-                            Text(circle.priority) // URLの代わりに表示
-                                .font(.footnote)
-                                .foregroundColor(.blue)
                         }
+                        .buttonStyle(.plain) // Listのボタン見た目を通常行っぽく
                     }
-                    .onDelete(perform: deleteCircle) // 削除機能を追加
+                    .onDelete(perform: deleteCircle)
                 }
             }
             .navigationTitle("コミメモッ！_prototype")
+            
+            // 追加画面
             .sheet(isPresented: $showingAddSheet) {
-                //AddCircleViewに、リストのデータを渡す
-                NavigationView {
-                    AddCircleView(circles: $circles)
-                }
+                NavigationView { AddCircleView(circles: $circles) }
+            }
+            
+            // ★詳細表示：タップしたcircleが入ったらシート表示
+            .sheet(item: $selectedCircle) { circle in
+                CircleDetailSheet(circle: circle)
+                // “ちっちゃい”高さに固定/候補を用意（iOS16+）
+                    .presentationDetents([.height(260), .medium])
+                    .presentationDragIndicator(.visible)
             }
         }
         
-        Divider() // コンテンツとフッターの区切り線
-        
+        // （あなたのフッターはこのままでOK）
+        Divider()
         HStack {
             Spacer()
-            
-            // メモボタン
-            Button(action: {
-                // TODO: メモボタンのアクションをここに記述
-            }) {
-                Image(systemName: "note.text")
-                    .font(.title2)
-            }
-            
+            Button { } label: { Image(systemName: "note.text").font(.title2) }
             Spacer()
-            
-            // 地図ボタン
-            Button(action: {
-                // TODO: 地図ボタンのアクションをここに記述
-            }) {
-                Image(systemName: "map")
-                    .font(.title2)
-            }
-            
+            Button { } label: { Image(systemName: "map").font(.title2) }
             Spacer()
         }
         .padding(.top, 8)
-        .background(Color(.systemGray6).edgesIgnoringSafeArea(.bottom)) // フッターの背景色
-
+        .background(Color(.systemGray6).edgesIgnoringSafeArea(.bottom))
     }
     
-    // リストから項目を削除する関数
     private func deleteCircle(at offsets: IndexSet) {
         circles.remove(atOffsets: offsets)
     }
 }
+
 
 //リスト追加の画面
 struct AddCircleView: View {
@@ -234,6 +220,56 @@ struct AddCircleView: View {
         }
     }
 }
+
+// セルの詳細情報
+struct CircleDetailSheet: View {
+    let circle: CircleInfo
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(circle.place)
+                    .font(.title2.bold())
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Divider()
+            
+            row("作家名", circle.artistName)
+            row("ホール", circle.direction)
+            row("優先度", circle.priority)
+            
+            // URLが本物のURLなら Link、そうでなければ文字表示
+            if let url = URL(string: circle.url), url.scheme != nil {
+                HStack {
+                    Text("URL").foregroundColor(.secondary)
+                    Spacer()
+                    Link("開く", destination: url)
+                }
+            } else {
+                row("URL/番号", circle.url)
+            }
+            
+            Spacer(minLength: 0)
+        }
+        .padding()
+    }
+    
+    private func row(_ key: String, _ value: String) -> some View {
+        HStack {
+            Text(key).foregroundColor(.secondary)
+            Spacer()
+            Text(value).bold()
+        }
+    }
+}
+
 
 #Preview {
     ContentView()
