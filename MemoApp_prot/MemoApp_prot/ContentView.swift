@@ -8,14 +8,14 @@ struct ContentView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            NavigationView {
+            NavigationStack {
                 VStack {
                     HeaderBar(
                         onSort: { vm.sortByPriority() },
                         onAdd: { vm.openAdd() }
                     )
                     .padding(.horizontal)
-                    
+
                     List {
                         ForEach(vm.circles) { circle in
                             Button {
@@ -29,6 +29,12 @@ struct ContentView: View {
                     }
                 }
                 .navigationTitle("コミメモッ！_prototype")
+                .navigationDestination(isPresented: $vm.showMap) {
+                    CircleMapView(
+                        circles: vm.circles,
+                        onClose: { vm.closeMap() }
+                    )
+                }
             }
             
             Divider()
@@ -37,9 +43,7 @@ struct ContentView: View {
                 onMemo: {
                     // TODO: メモボタンのアクション
                 },
-                onMap: {
-                    // TODO: 地図ボタンのアクション
-                }
+                onMap: { vm.openMap() }
             )
         }
         // シート表示はここで一本化
