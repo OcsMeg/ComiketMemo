@@ -18,8 +18,18 @@ struct AddCircleView: View {
     @State private var selectedPriority = ""
     
     let halls = ["東", "西", "南"]
-    let rows = ["A","B","D","E","F","G","H","K","L","M","N","P","Q","R","S","T","U","V","W","X","Y","Z"]
-    let deskNumbers = (1...64).map { String($0) }
+    let rows = [
+        "WA", "WB", "WC",
+        "ヨ", "ユ", "ヤ",
+        "モ", "メ", "ム", "ミ", "マ",
+        "ホ", "ヘ", "フ", "ヒ", "ハ",
+        "ノ", "ネ", "ヌ", "ニ", "ナ",
+        "ト", "テ", "ツ", "チ", "タ",
+        "ソ", "セ", "ス", "シ", "サ",
+        "コ", "ケ", "ク", "キ", "カ",
+        "オ", "エ", "ウ", "イ"
+    ]
+    let deskNumbers = (1...66).map { String($0) }
     let positions = ["a", "b", "ab"]
     let priorities = ["高", "中", "低"]
     

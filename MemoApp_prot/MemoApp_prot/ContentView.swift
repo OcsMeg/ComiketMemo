@@ -40,9 +40,7 @@ struct ContentView: View {
             Divider()
             
             AppFooter(
-                onMemo: {
-                    // TODO: メモボタンのアクション
-                },
+                onMemo: { vm.closeMap() },
                 onMap: { vm.openMap() }
             )
         }
