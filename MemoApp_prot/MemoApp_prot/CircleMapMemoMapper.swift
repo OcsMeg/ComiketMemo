@@ -1,6 +1,8 @@
 import Foundation
 
 /// CircleInfo の場所情報をマップ描画用の DeskMemoState に変換する
+/// - CircleInfoは「東/西」と「A-05a」のような入力値を持つ
+/// - マップは「東3-A-05」のcanonicalIdで机を持つため、ここで両者を突き合わせる
 struct CircleMapMemoMapper {
     static func makeMemoStates(
         from circles: [CircleInfo],
@@ -20,6 +22,7 @@ struct CircleMapMemoMapper {
             return DeskMemoState(
                 deskId: matchedDesk.canonicalId,
                 space: parsedPlace.space,
+                // 現在のCircleInfoには購入済みフラグがないため、登録済みメモは未購入扱いで赤表示する。
                 isPurchased: false
             )
         }
@@ -49,12 +52,14 @@ struct CircleMapMemoMapper {
     private static func isSameHall(circleHall: String, deskHall: String) -> Bool {
         let normalizedCircleHall = circleHall.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedCircleHall.isEmpty else { return true }
+        // 登録画面の「東」「西」は、地図データの「東3」「西1」「西2」に前方一致させる。
         return deskHall == normalizedCircleHall || deskHall.hasPrefix(normalizedCircleHall)
     }
 
     private static func parsePlace(_ place: String) -> ParsedPlace? {
         let trimmedPlace = place.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedPlace = trimmedPlace.lowercased()
+        // ハイフンあり/なしの両方を許容する。例: "A-05a", "A05a", "め-12ab"
         let pattern = #"^(.+?)-?(\d+)(ab|a|b)$"#
 
         guard let regex = try? NSRegularExpression(pattern: pattern),

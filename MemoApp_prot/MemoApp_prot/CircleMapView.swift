@@ -18,6 +18,8 @@ struct CircleMapView: View {
     @State private var lastRotation: Angle = .zero
 
     private var mapMemos: [DeskMemoState] {
+        // 選択中の館の机一覧だけを渡すことで、同じ「西-め-01a」のようなメモでも
+        // 現在表示している館に存在する机だけが赤くなる。
         CircleMapMemoMapper.makeMemoStates(
             from: circles,
             layouts: selectedVenue.blockLayouts
@@ -30,6 +32,7 @@ struct CircleMapView: View {
                 Color(.systemBackground)
 
                 ZStack(alignment: .topLeading) {
+                    // 館ごとのViewは固定レイアウトを持ち、パン/ズーム/回転はこの親Viewで一括管理する。
                     switch selectedVenue {
                     case .east123:
                         Summer2026Day1East123MapView(memos: mapMemos)
@@ -108,6 +111,7 @@ struct CircleMapView: View {
     }
 
     private func resetViewport() {
+        // 館を切り替えたときに前のズーム・回転位置を引き継ぐと迷いやすいため初期視点に戻す。
         offset = .zero
         lastOffset = .zero
         scale = Self.initialScale

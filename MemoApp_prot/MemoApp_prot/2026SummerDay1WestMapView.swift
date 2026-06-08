@@ -1,7 +1,10 @@
 import SwiftUI
 
+// C107Map_w12_B4.pdf をもとにした西1・西2のプロトタイプ配置。
+// 座標はPDFそのものの座標ではなく、アプリ内マップ用に読みやすく調整した値。
 private let westDeskSize: CGFloat = 28
 
+// 西館の島サーは列ごとに机数が違うため、列名・位置・終了番号だけを個別指定する。
 private struct WestIslandSpec {
     let hall: String
     let block: String
@@ -10,6 +13,8 @@ private struct WestIslandSpec {
 }
 
 private func westIslandConfig(_ spec: WestIslandSpec) -> BlockLayoutConfig {
+    // 西館の島も2列折り返しで表示する。endNumberの半分を折り返し位置にして、
+    // 26机・28机・52机の列を同じ生成処理で扱えるようにしている。
     let foldAfterNumber = max(1, spec.endNumber / 2)
 
     return BlockLayoutConfig(
@@ -33,6 +38,7 @@ private func westIslandConfig(_ spec: WestIslandSpec) -> BlockLayoutConfig {
     )
 }
 
+// PDF上段の西1島サー。配列順は画面左から右への並び。
 private let west1TopIslandSpecs: [WestIslandSpec] = [
     WestIslandSpec(hall: "西1", block: "ふ", origin: CGPoint(x: 220, y: 120), endNumber: 52),
     WestIslandSpec(hall: "西1", block: "ひ", origin: CGPoint(x: 316, y: 120), endNumber: 52),
@@ -47,6 +53,7 @@ private let west1TopIslandSpecs: [WestIslandSpec] = [
     WestIslandSpec(hall: "西1", block: "つ", origin: CGPoint(x: 1_252, y: 120), endNumber: 28)
 ]
 
+// PDF下段の西1島サー。上段とはY座標だけでなく列数も異なる。
 private let west1BottomIslandSpecs: [WestIslandSpec] = [
     WestIslandSpec(hall: "西1", block: "む", origin: CGPoint(x: 220, y: 940), endNumber: 52),
     WestIslandSpec(hall: "西1", block: "み", origin: CGPoint(x: 316, y: 940), endNumber: 52),
@@ -55,6 +62,7 @@ private let west1BottomIslandSpecs: [WestIslandSpec] = [
     WestIslandSpec(hall: "西1", block: "へ", origin: CGPoint(x: 604, y: 940), endNumber: 52)
 ]
 
+// PDF上段の西2島サー。西1と同じ生成処理を使い、hallだけ西2に変える。
 private let west2TopIslandSpecs: [WestIslandSpec] = [
     WestIslandSpec(hall: "西2", block: "ち", origin: CGPoint(x: 1_520, y: 120), endNumber: 28),
     WestIslandSpec(hall: "西2", block: "た", origin: CGPoint(x: 1_616, y: 120), endNumber: 28),
@@ -69,6 +77,7 @@ private let west2TopIslandSpecs: [WestIslandSpec] = [
     WestIslandSpec(hall: "西2", block: "き", origin: CGPoint(x: 2_552, y: 120), endNumber: 52)
 ]
 
+// PDF下段の西2島サー。
 private let west2BottomIslandSpecs: [WestIslandSpec] = [
     WestIslandSpec(hall: "西2", block: "か", origin: CGPoint(x: 2_168, y: 940), endNumber: 52),
     WestIslandSpec(hall: "西2", block: "お", origin: CGPoint(x: 2_264, y: 940), endNumber: 52),
@@ -85,6 +94,8 @@ private let westIslandLayouts = (
     DeskLayoutGenerator.generateLayout(from: westIslandConfig($0))
 }
 
+// 西館の壁サーはコの字の外周に沿って並ぶ。
+// numberGroupsはPDFで離れて見える机のまとまりを表し、groupSpacingで間隔を空ける。
 private let westWallConfigs: [WallLayoutConfig] = [
     WallLayoutConfig(
         hall: "西1",
@@ -203,6 +214,7 @@ private let westWallLayouts = westWallConfigs.map {
     WallLayoutGenerator.generateLayout(from: $0)
 }
 
+// 西1・西2それぞれの中央横通路と、館の境目になる縦通路。
 private let westAisleConfigs: [AisleLayoutConfig] = [
     AisleLayoutConfig(
         id: "west1-center-horizontal",
@@ -239,6 +251,8 @@ private let westComposedMapLayout = AisleLayoutGenerator.generate(
 )
 
 /// 2026年夏 1日目 西1・西2ホールのマップ
+/// - 通常の列ラベルはBlockMapLayout側で描画する
+/// - 「西1」「西2」の館名だけは全体の位置関係を示すため、このViewで重ねている
 struct Summer2026Day1WestMapView: View {
     static let composedLayout = westComposedMapLayout
     static let blockLayouts = westComposedMapLayout.blockLayouts

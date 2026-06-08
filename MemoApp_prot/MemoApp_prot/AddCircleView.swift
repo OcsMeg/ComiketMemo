@@ -18,6 +18,9 @@ struct AddCircleView: View {
     @State private var selectedPriority = ""
     
     let halls = ["東", "西", "南"]
+
+    // マップ側の列名と照合するため、東館・西館で使う列名をここに含める。
+    // 将来的には開催回ごとの地図設定から選択肢を生成するのが自然。
     let rows = [
         "ア",
         "あ", "う", "え", "お", "か", "き", "く", "け", "こ",
@@ -33,6 +36,8 @@ struct AddCircleView: View {
         "コ", "ケ", "ク", "キ", "カ",
         "オ", "エ", "ウ", "イ"
     ]
+
+    // 現在の最大値は東館ア列の壁サー 95 番に合わせている。
     let deskNumbers = (1...95).map { String($0) }
     let positions = ["a", "b", "ab"]
     let priorities = ["高", "中", "低"]

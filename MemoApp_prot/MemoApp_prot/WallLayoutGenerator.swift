@@ -2,6 +2,8 @@ import Foundation
 import CoreGraphics
 
 /// WallLayoutConfig を受け取り、壁サー用の一列机配置を生成する
+/// - 壁サーは島サーと違い、机のまとまりや間隔が場所ごとに変わる
+/// - numberGroupsを順番に並べ、groupSpacingでPDF上の空白を再現する
 struct WallLayoutGenerator {
     static func generateLayout(from config: WallLayoutConfig) -> BlockMapLayout {
         let deskCount = config.numberGroups.reduce(0) { $0 + $1.count }
@@ -19,6 +21,7 @@ struct WallLayoutGenerator {
         let direction: CGFloat = config.isReversed ? -1 : 1
         var desks: [DeskData] = []
         desks.reserveCapacity(deskCount)
+        // cursorはoriginからの進行距離。isReversedの場合は負方向へ進める。
         var cursor: CGFloat = 0
         var blockLabelPosition: CGPoint?
 
@@ -69,6 +72,7 @@ struct WallLayoutGenerator {
                 continue
             }
 
+            // labelAfterGroupIndexを指定した壁だけ、グループ間の空白に列名を置く。
             if config.labelAfterGroupIndex == groupIndex,
                let lastPosition {
                 let nextPosition = position(

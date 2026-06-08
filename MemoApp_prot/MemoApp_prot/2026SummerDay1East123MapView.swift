@@ -1,8 +1,13 @@
 import SwiftUI
 
+// 館ごとの固定レイアウト定義。
+// 机の生成・通路の挿入・描画は別ファイルに分け、このファイルでは
+// 「2026年夏 1日目 東1-3」の会場データだけを持つ。
 private let east123BlockOrigin = CGPoint(x: 64, y: 82)
 private let east123BlockPitch: CGFloat = 96
 private let east123DeskSize: CGFloat = 28
+
+// 島サーの列名。配列順が画面上の左から右への並びになる。
 private let east123IslandBlocks = [
     "ヨ", "ユ", "ヤ",
     "モ", "メ", "ム", "ミ", "マ",
@@ -15,6 +20,8 @@ private let east123IslandBlocks = [
 ]
 
 private func east123IslandConfig(block: String, columnIndex: Int) -> BlockLayoutConfig {
+    // 東館の島は1列あたり66机。右下を01として上方向に増え、
+    // 33の後に折り返して左列へ並ぶため、firstLinePositionをtrailingにしている。
     BlockLayoutConfig(
         hall: "東3",
         block: block,
@@ -39,12 +46,15 @@ private func east123IslandConfig(block: String, columnIndex: Int) -> BlockLayout
     )
 }
 
+// ブロック名と列番号だけを渡し、共通の島サー生成処理で机データを作る。
 private let east123IslandLayouts = east123IslandBlocks.enumerated().map { index, block in
     DeskLayoutGenerator.generateLayout(
         from: east123IslandConfig(block: block, columnIndex: index)
     )
 }
 
+// 壁サーは机数や間隔が場所ごとに変わるため、numberGroupsでまとまりを明示する。
+// ここでは右壁・上壁・左壁に分けて、ア列の壁サー配置を構成している。
 private let east123WallConfigs: [WallLayoutConfig] = [
     WallLayoutConfig(
         hall: "東3",
@@ -134,6 +144,8 @@ private let east123WallLayouts = east123WallConfigs.map {
     WallLayoutGenerator.generateLayout(from: $0)
 }
 
+// 通路は机を直接消すのではなく、指定位置以降の机を押し出して作る。
+// 真ん中の太い通路だけ島名ラベルを載せるため showsIslandLabels を true にしている。
 private let east123AisleConfigs: [AisleLayoutConfig] = [
     AisleLayoutConfig(
         id: "east123-horizontal-1",

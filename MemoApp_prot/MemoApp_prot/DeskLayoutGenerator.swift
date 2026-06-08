@@ -2,6 +2,8 @@ import Foundation
 import CoreGraphics
 
 /// BlockLayoutConfig を受け取り、机配置を生成する
+/// - 島サーの番号生成と座標計算をViewから分離するための生成器
+/// - View側はここで作られたDeskDataを描画するだけにする
 struct DeskLayoutGenerator {
     static func generate(from config: BlockLayoutConfig) -> [DeskData] {
         generateLayout(from: config).desks
@@ -18,7 +20,7 @@ struct DeskLayoutGenerator {
             )
         }
 
-        let step = config.deskSize + config.spacing             // 机1枚分の進み幅
+        let step = config.deskSize + config.spacing             // 同じ列/行の机1枚分の進み幅
         let foldedLineStep = config.deskSize + config.foldGap   // 折り返し後の列/行への進み幅
         var desks: [DeskData] = []
         desks.reserveCapacity(config.endNumber - config.startNumber + 1)
@@ -105,6 +107,8 @@ struct DeskLayoutGenerator {
     /// 折り返し番号をもとに、主方向の何番目か / 何列目かを求める。
     /// horizontal: primaryIndex がX方向、foldedLineIndex がY方向
     /// vertical: primaryIndex がY方向、foldedLineIndex がX方向
+    /// firstLinePosition/reversedを変えることで「右下が01」「左上が01」などの
+    /// 会場ごとの番号向きを同じ生成処理で表現する。
     private static func gridPosition(
         for number: Int,
         in config: BlockLayoutConfig

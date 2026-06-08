@@ -1,12 +1,15 @@
 import CoreGraphics
 
 /// 通路設定をもとに机をずらし、机が配置されない領域を作る
+/// - 元のブロック座標は「通路なし」の状態で定義する
+/// - 通路位置より後ろにある机・ラベルだけを押し出し、通路のグレー領域を挿入する
 struct AisleLayoutGenerator {
     static func generate(
         blockLayouts: [BlockMapLayout],
         aisleConfigs: [AisleLayoutConfig]
     ) -> ComposedMapLayout {
         let aisles = aisleConfigs.map { makeAisle(from: $0, allConfigs: aisleConfigs) }
+        // 島名は机の下ではなく中央通路へ集約できるよう、対象通路の中央Yを共有する。
         let islandLabelY = zip(aisleConfigs, aisles)
             .first { config, _ in
                 config.direction == .horizontal && config.showsIslandLabels
@@ -97,10 +100,12 @@ struct AisleLayoutGenerator {
         for config in configs {
             switch config.direction {
             case .horizontal:
+                // 通路より下にある要素だけ、通路の太さ分だけ下へ移動する。
                 if point.y >= config.position {
                     result.y += config.width
                 }
             case .vertical:
+                // 通路より右にある要素だけ、通路の太さ分だけ右へ移動する。
                 if point.x >= config.position {
                     result.x += config.width
                 }
@@ -132,6 +137,7 @@ struct AisleLayoutGenerator {
         from config: AisleLayoutConfig,
         allConfigs: [AisleLayoutConfig]
     ) -> AisleData {
+        // 複数通路がある場合、先に挿入される通路ぶんだけ通路自身の位置も補正する。
         let precedingConfigs = allConfigs.filter { other in
             guard other.id != config.id else { return false }
 
