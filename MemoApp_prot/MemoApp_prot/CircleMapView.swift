@@ -2,13 +2,14 @@ import SwiftUI
 
 // マップ画面
 // - ドラッグでパン，ピンチで拡大縮小，2本指で回転
-// - BlockMapView で生成した机配置を表示する
+// - 選択中の館の机配置を表示する
 struct CircleMapView: View {
     private static let initialScale: CGFloat = 0.65
 
     let circles: [CircleInfo]
     let onClose: () -> Void
 
+    @State private var selectedVenue: MapVenue = .east123
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
     @State private var scale: CGFloat = initialScale
@@ -19,7 +20,7 @@ struct CircleMapView: View {
     private var mapMemos: [DeskMemoState] {
         CircleMapMemoMapper.makeMemoStates(
             from: circles,
-            layouts: sampleMapLayouts
+            layouts: selectedVenue.blockLayouts
         )
     }
 
@@ -29,11 +30,11 @@ struct CircleMapView: View {
                 Color(.systemBackground)
 
                 ZStack(alignment: .topLeading) {
-                    ForEach(sampleMapLayouts.indices, id: \.self) { index in
-                        BlockMapView(
-                            layout: sampleMapLayouts[index],
-                            memos: mapMemos
-                        )
+                    switch selectedVenue {
+                    case .east123:
+                        Summer2026Day1East123MapView(memos: mapMemos)
+                    case .west:
+                        Summer2026Day1WestMapView(memos: mapMemos)
                     }
                 }
                 .scaleEffect(scale, anchor: .topLeading)
@@ -43,6 +44,11 @@ struct CircleMapView: View {
             .frame(width: geo.size.width, height: geo.size.height)
             .clipped()
             .contentShape(Rectangle())
+            .overlay(alignment: .bottomTrailing) {
+                venueToggle
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 18)
+            }
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -74,6 +80,9 @@ struct CircleMapView: View {
                     }
             )
         }
+        .onChange(of: selectedVenue) { _, _ in
+            resetViewport()
+        }
         .ignoresSafeArea(edges: .bottom)
         .navigationTitle("マップ")
         .navigationBarTitleDisplayMode(.inline)
@@ -82,5 +91,28 @@ struct CircleMapView: View {
                 Button("閉じる") { onClose() }
             }
         }
+    }
+
+    private var venueToggle: some View {
+        Picker("館", selection: $selectedVenue) {
+            ForEach(MapVenue.allCases) { venue in
+                Text(venue.title).tag(venue)
+            }
+        }
+        .pickerStyle(.segmented)
+        .frame(width: 160)
+        .padding(8)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .shadow(color: Color.black.opacity(0.12), radius: 8, y: 2)
+    }
+
+    private func resetViewport() {
+        offset = .zero
+        lastOffset = .zero
+        scale = Self.initialScale
+        lastScale = Self.initialScale
+        rotation = .zero
+        lastRotation = .zero
     }
 }

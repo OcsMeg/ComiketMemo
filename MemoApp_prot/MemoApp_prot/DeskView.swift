@@ -38,6 +38,12 @@ struct DeskView: View {
         }
     }
 
+    // MARK: - 机番号
+
+    private var numberFontSize: CGFloat {
+        min(15, max(11, desk.size * 0.46))
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -62,9 +68,24 @@ struct DeskView: View {
                     .overlay(divider)
                 }
             }
+
+            Text(desk.number)
+                .font(
+                    .system(
+                        size: numberFontSize,
+                        weight: .semibold,
+                        design: .monospaced
+                    )
+                )
+                .foregroundStyle(Color.black)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(width: desk.size - 4, height: desk.size - 4)
+                .allowsHitTesting(false)
         }
         .frame(width: desk.size, height: desk.size)
         .overlay(Rectangle().stroke(Color.black, lineWidth: 0.5))
         .rotationEffect(Angle(degrees: desk.rotationDegrees))
+        .accessibilityLabel("\(desk.block)-\(desk.number)")
     }
 }

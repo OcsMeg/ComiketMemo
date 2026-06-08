@@ -109,21 +109,42 @@ struct DeskLayoutGenerator {
         for number: Int,
         in config: BlockLayoutConfig
     ) -> (primaryIndex: Int, foldedLineIndex: Int) {
-        guard let foldAfterNumber = config.foldAfterNumber,
-              number > foldAfterNumber else {
-            return (number - config.startNumber, 0)
+        guard let foldAfterNumber = config.foldAfterNumber else {
+            let index = number - config.startNumber
+            let count = config.endNumber - config.startNumber + 1
+            let primaryIndex = config.firstLineReversed
+                ? max(0, count - 1 - index)
+                : index
+            return (primaryIndex, 0)
         }
 
         let firstLineCount = max(1, foldAfterNumber - config.startNumber + 1)
-        let foldedIndex = number - foldAfterNumber - 1
-        let primaryIndex: Int
+        let firstLineIndex = number - config.startNumber
+        let firstLineGridIndex: Int
+        let foldedLineGridIndex: Int
 
-        if config.foldedLineReversed {
-            primaryIndex = max(0, firstLineCount - 1 - foldedIndex)
-        } else {
-            primaryIndex = foldedIndex
+        switch config.firstLinePosition {
+        case .leading:
+            firstLineGridIndex = 0
+            foldedLineGridIndex = 1
+        case .trailing:
+            firstLineGridIndex = 1
+            foldedLineGridIndex = 0
         }
 
-        return (primaryIndex, 1)
+        guard number > foldAfterNumber else {
+            let primaryIndex = config.firstLineReversed
+                ? max(0, firstLineCount - 1 - firstLineIndex)
+                : firstLineIndex
+            return (primaryIndex, firstLineGridIndex)
+        }
+
+        let foldedIndex = number - foldAfterNumber - 1
+        let foldedLineCount = max(1, config.endNumber - foldAfterNumber)
+        let primaryIndex = config.foldedLineReversed
+            ? max(0, foldedLineCount - 1 - foldedIndex)
+            : foldedIndex
+
+        return (primaryIndex, foldedLineGridIndex)
     }
 }

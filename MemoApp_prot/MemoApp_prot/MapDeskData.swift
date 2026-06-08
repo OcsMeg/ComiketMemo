@@ -25,6 +25,18 @@ enum LayoutDirection {
     case vertical   // Y方向に増加
 }
 
+/// 折り返し前の列・行を配置する側
+enum FirstLinePosition {
+    case leading  // 横並びなら上、縦並びなら左
+    case trailing // 横並びなら下、縦並びなら右
+}
+
+/// 通路の向き
+enum AisleDirection: Equatable {
+    case horizontal
+    case vertical
+}
+
 // MARK: - 机データ
 
 /// 1つの机を表すデータ（A-01 のように番号単位）
@@ -60,23 +72,27 @@ struct BlockLayoutConfig {
     let rotationDegrees: Double
     let foldAfterNumber: Int?   // この机番号の後で折り返す（例: 19ならA-19の後にA-20から2列目へ。nil=折り返しなし）
     let foldGap: CGFloat        // 折り返し後の列/行との隙間
-    let foldedLineReversed: Bool // trueなら端で折り返すように2列目/2行目を逆向きに並べる
+    let firstLinePosition: FirstLinePosition
+    let firstLineReversed: Bool
+    let foldedLineReversed: Bool
 }
 
 /// 壁サーの一列配置を生成するための設定
-/// - 壁は机数が固定でないため、numbersで机番号を明示する
+/// - 壁は机数が固定でないため、numberGroupsで番号のまとまりを明示する
 struct WallLayoutConfig {
     let hall: String
     let block: String
-    let numbers: [Int]
+    let numberGroups: [[Int]]
     let origin: CGPoint
     let deskSize: CGFloat
     let spacing: CGFloat
+    let groupSpacing: CGFloat
     let layoutDirection: LayoutDirection
+    let isReversed: Bool
     let splitDirection: SplitDirection
     let availableSpaces: [SpaceType]
     let rotationDegrees: Double
-    let labelOffset: CGPoint
+    let labelAfterGroupIndex: Int?
 }
 
 /// 生成済みの地図レイアウト
@@ -87,6 +103,35 @@ struct BlockMapLayout {
     let outerFrame: CGRect
     let blockLabel: String
     let blockLabelPosition: CGPoint
+}
+
+// MARK: - 通路データ
+
+/// 通路を生成するための設定
+/// - position: 通路を挿入するX座標またはY座標
+/// - spanStart / spanLength: 通路が伸びる範囲
+/// - showsIslandLabels: trueの場合、島名をこの通路の中央へ表示する
+struct AisleLayoutConfig: Identifiable {
+    let id: String
+    let direction: AisleDirection
+    let position: CGFloat
+    let width: CGFloat
+    let spanStart: CGFloat
+    let spanLength: CGFloat
+    let showsIslandLabels: Bool
+}
+
+/// 描画用に生成された通路
+struct AisleData: Identifiable {
+    let id: String
+    let frame: CGRect
+}
+
+/// 机ブロックと通路を合成した地図全体のレイアウト
+struct ComposedMapLayout {
+    let blockLayouts: [BlockMapLayout]
+    let aisles: [AisleData]
+    let canvasSize: CGSize
 }
 
 // MARK: - メモ状態（表示用）
