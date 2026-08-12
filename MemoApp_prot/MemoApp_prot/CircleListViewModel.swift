@@ -6,7 +6,7 @@ import SwiftUI
 enum ActiveSheet: Identifiable, Equatable {
     case add
     case detail(CircleInfo)
-    
+
     var id: String {
         switch self {
         case .add:
@@ -22,17 +22,26 @@ enum ActiveSheet: Identifiable, Equatable {
 final class CircleListViewModel: ObservableObject {
     @Published var circles: [CircleInfo] = sampleData
     @Published var activeSheet: ActiveSheet? = nil
-    
+    @Published var showMap: Bool = false
+
     func openAdd() {
         activeSheet = .add
     }
-    
+
     func openDetail(_ circle: CircleInfo) {
         activeSheet = .detail(circle)
     }
-    
+
+    func openMap() {
+        showMap = true
+    }
+
     func closeSheet() {
         activeSheet = nil
+    }
+
+    func closeMap() {
+        showMap = false
     }
     
     func sortByPriority() {
